@@ -12,7 +12,6 @@ int main(int argc, char *argv[]) {
     int sockfd;
     struct sockaddr_in server_addr;
     char message[100];
-
     char* ip, *imageName;
     int port, nThreads, nCycles;
     if(argc != 6){
