@@ -4,14 +4,22 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <pthread.h>
+
 #include "../../include/shared.h"
 
 // cliente  <ip>  <puerto>  <imagen>  <N−threads>  <N−ciclos>
+void *socket_thread(void *args);
+
+typedef struct clientArgs
+{
+    char* addrIP;
+    char* imageName;
+    int portNum;
+    int nCycles;
+} clientArgs;
 
 int main(int argc, char *argv[]) {
-    int sockfd;
-    struct sockaddr_in server_addr;
-    char message[100];
 
     char* ip, *imageName;
     int port, nThreads, nCycles;
@@ -25,44 +33,86 @@ int main(int argc, char *argv[]) {
     nThreads = atoi(argv[4]);   // number of threads doing requests to server
     nCycles = atoi(argv[5]);    // number of times a thread should make a request
 
-    printf("Params received:\n  <ip>: %s\n  <port>: %d\n  <imagePath>: %s\n  <N−threads>: %d\n  <N−cycles>: %d \n", ip, port, imageName, nThreads, nCycles);
+    // socket params for each thread
+    clientArgs *args = malloc(sizeof(clientArgs));
+    args->addrIP = ip;
+    args->imageName = imageName;
+    args->portNum = port;
+    args->nCycles = nCycles;
 
-    // Create socket
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    //amount of needed threads
+    pthread_t threads[nThreads];
+
+    for(int i=0; i<nThreads; i++)
+    {
+        if(pthread_create(&threads[i], NULL, socket_thread, (void*) args) != 0){
+            printf("Error with pthread_create");
+            exit(1);
+        }
+    }
+    for(int i=0; i<nThreads; i++)
+    {
+        if(pthread_join(threads[i], NULL) != 0)
+        {
+            perror("Could not join the thread");
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+void *socket_thread(void *args){
+    clientArgs *cArgs = (clientArgs*) args;
+    printf("args: %s %s %d %d \n", cArgs->addrIP, cArgs->imageName, cArgs->portNum, cArgs->nCycles);
+
+    //Create socket
+    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
         perror("Error creating socket");
         exit(EXIT_FAILURE);
     }
-    // Set server address
+    printf("sockfd %d \n", sockfd);
+
+    // set server address
+    struct sockaddr_in server_addr;
     memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = inet_addr(IP); // Replace with server IP address
-    server_addr.sin_port = htons(PORT); // Replace with server port number
+    server_addr.sin_family = AF_INET;                           // using IPv4
+    server_addr.sin_addr.s_addr = inet_addr(cArgs->addrIP);     // Replace with server IP address
+    server_addr.sin_port = htons(cArgs->portNum);               // Replace with server port number
 
-    // Connect to server
+    // request connection to server
     if (connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-        perror("Error connecting to server");
+        printf("Error connecting to server");
+        exit(EXIT_FAILURE);
+    }
+    
+    // Open the image file in binary mode
+    FILE* fp = fopen(image3, "rb");
+    if (fp == NULL) {
+        printf("Error opening file\n");
         exit(EXIT_FAILURE);
     }
 
-    // // Send message to server
-    // strcpy(message, "Hello server!");
-    // if (send(sockfd, message, strlen(message), 0) < 0) {
-    //     perror("Error sending message");
-    //     exit(EXIT_FAILURE);
-    // }
+    // Check the amount of bytes that need to be sent
+    fseek(fp, 0, SEEK_END);
+    long file_size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    printf("file size in bytes: %ld \n", file_size);
 
-    // Receive response from server
-    memset(message, 0, sizeof(message));
-    if (recv(sockfd, message, sizeof(message), 0) < 0) {
-        perror("Error receiving response");
-        exit(EXIT_FAILURE);
+    // Sending the image in chunks
+    char buffer[CHUNCK_SIZE];
+    int bytes_read, bytes_sent;
+    while((bytes_read = fread(buffer, 1, CHUNCK_SIZE, fp)) > 0){
+        bytes_sent = send(sockfd, buffer, bytes_read, 0);
+        if ((bytes_sent < 0) || (bytes_sent != bytes_read)) {
+            printf("Error sending data");
+            exit(EXIT_FAILURE);
+        }
     }
 
-    printf("Server response: %s\n", message);
-
-    // Close socket
+    // Cleaning up
+    fclose(fp);
     close(sockfd);
-
-    return 0;
 }
+
