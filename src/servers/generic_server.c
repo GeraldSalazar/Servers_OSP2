@@ -20,10 +20,10 @@
 
 // SO_REUSEPORT  ->  allows multiple sockets to bind to the same IP address and port number combination.
 // SO_REUSEADDR  ->  allows a socket to be bound to a local address that is already in use.
+void handle_request(int socket_fd, int image_count);
 
 int main(int argc, char const *argv[])
 {
-
     int socket_fd, new_socket;
     int opt = 1;
     char buffer[1024] = {0};
@@ -41,7 +41,6 @@ int main(int argc, char const *argv[])
         perror("Error with socket call");
         exit(EXIT_FAILURE);
     }
-    printf("socket_fd: %d \n", socket_fd);
 
     // Setting socket configs
     int optRes = setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
@@ -49,7 +48,6 @@ int main(int argc, char const *argv[])
         perror("Error with setsockopt call");
         exit(EXIT_FAILURE);
     }
-    printf("optRes: %d \n", optRes);
 
     // Bind the socket to the specified address and port
     int bindRes = bind(socket_fd, (struct sockaddr *)&address, sizeof(address));
@@ -57,7 +55,6 @@ int main(int argc, char const *argv[])
         perror("Error with bind call");
         exit(EXIT_FAILURE);
     }
-    printf("bindRes: %d \n" , bindRes);
 
     // Listen for incoming connections
     int queue_max = 4;
@@ -74,20 +71,40 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     }
 
-
-    char *hello = "Hello from the server...";
+    int image_count = 0;
     while(1)
     {
         printf("Waiting for a connection on port %d. IP: %s\n", PORT, inet_ntoa(sin.sin_addr));
         fflush(stdout);
-        // Accept incoming connections and handle them
+        // Wait and accept incoming connections and handle them
         if ((new_socket = accept(socket_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0) {
             perror("accept");
             exit(EXIT_FAILURE);
         }
-        send(new_socket, hello, strlen(hello), 0);
-        printf("Message sent\n");
+        handle_request(new_socket, image_count);
+        image_count++;
         close(new_socket);
     }
+    close(socket_fd);
     return 0;
+}
+
+void handle_request(int socket_fd, int image_count)
+{
+    // Open a file to write the image data
+    char imageName[20];
+    sprintf(imageName, "image%d_%d.jpg", getpid(), image_count);
+    printf("image: %s \n", imageName);
+
+    FILE* fp = fopen(imageName, "wb");
+    char buffer[CHUNCK_SIZE];
+    int bytes_received, bytes_written;
+    // Receive the image data in chunks and write to file
+    while ((bytes_received = recv(socket_fd, buffer, CHUNCK_SIZE, 0)) > 0) {
+        bytes_written = fwrite(buffer, 1, bytes_received, fp);
+        if (bytes_written != bytes_received) {
+            printf("Error writing data\n");
+            break;
+        }
+    }
 }
