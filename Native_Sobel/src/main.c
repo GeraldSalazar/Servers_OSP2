@@ -132,7 +132,8 @@ int main(int argc, char** argv)
 
 	//always output the final sobel countour
 	get_time(i_o_start_png_conversion);
-	output_gradient(true, countour_img, gray_size, str_width, str_height, STRING_BUFFER_SIZE, "Native_Sobel/imgs_out/sobel_countour.png");
+	output_gradient(true, countour_img, 
+	gray_size, str_width, str_height, STRING_BUFFER_SIZE, "Native_Sobel/imgs_out/sobel_countour.png");
 	get_time(i_o_end_png_conversion);
 
 	//#############5. Step - Display the elapsed time in the different parts of the code

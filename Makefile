@@ -1,6 +1,6 @@
 all:
 	gcc -o bin/client src/client/client.c -lrt -lpthread
-	gcc -o bin/generic_server src/servers/generic_server.c -lrt -lpthread
+	gcc -o bin/generic_server Native_Sobel/src/file_operations.c Native_Sobel/src/image_operations.c Native_Sobel/src/Sobel.c -lm src/servers/generic_server.c -lrt -lpthread
 
 bs:
 	gcc -o bin/generic_server src/servers/generic_server.c

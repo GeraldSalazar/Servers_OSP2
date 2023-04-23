@@ -6,7 +6,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include "../../include/shared.h"
-
+#include "../../Native_Sobel/src/Sobel.h"
 
 
 // struct sockaddr_in {
@@ -107,4 +107,5 @@ void handle_request(int socket_fd, int image_count)
             break;
         }
     }
+    sobel(imageName);
 }
