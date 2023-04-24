@@ -5,8 +5,13 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <pthread.h>
+#include <semaphore.h>
 
 #include "../../include/shared.h"
+
+
+// semaforo
+sem_t mutex;
 
 // cliente  <ip>  <puerto>  <imagen>  <N−threads>  <N−ciclos>
 void *socket_thread(void *args);
@@ -21,6 +26,7 @@ typedef struct clientArgs
 
 int main(int argc, char *argv[]) {
 
+    sem_init(&mutex, 0, 1); // initilizes semaphore
     char* ip, *imageName;
     int port, nThreads, nCycles;
     if(argc != 6){
@@ -59,6 +65,8 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    sem_destroy(&mutex);
+
     return 0;
 }
 
@@ -86,31 +94,47 @@ void *socket_thread(void *args){
         printf("Error connecting to server");
         exit(EXIT_FAILURE);
     }
-    
+
+
     // Open the image file in binary mode
     FILE* fp = fopen(image3, "rb");
     if (fp == NULL) {
         printf("Error opening file\n");
         exit(EXIT_FAILURE);
     }
+    for (int i=0; i<cArgs->nCycles;i++){
 
-    // Check the amount of bytes that need to be sent
-    fseek(fp, 0, SEEK_END);
-    long file_size = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-    printf("file size in bytes: %ld \n", file_size);
 
-    // Sending the image in chunks
-    char buffer[CHUNCK_SIZE];
-    int bytes_read, bytes_sent;
-    while((bytes_read = fread(buffer, 1, CHUNCK_SIZE, fp)) > 0){
-        bytes_sent = send(sockfd, buffer, bytes_read, 0);
-        if ((bytes_sent < 0) || (bytes_sent != bytes_read)) {
-            printf("Error sending data");
-            exit(EXIT_FAILURE);
+
+        // Check the amount of bytes that need to be sent
+        fseek(fp, 0, SEEK_END);
+        long file_size = ftell(fp);
+        fseek(fp, 0, SEEK_SET);
+        printf("file size in bytes: %ld \n", file_size);
+        // Sending the image in chunks
+        char buffer[CHUNCK_SIZE];
+        int bytes_read, bytes_sent;
+        //106113
+        //char num_str[20];
+        //sprintf(num_str, "%ld", file_size);
+        
+        //bytes_sent = send(sockfd, num_str , sizeof(num_str), 0);
+        
+        //printf("\n ---------------%s--------------- \n", num_str);
+
+        //fflush(stdout);
+        
+        while((bytes_read = fread(buffer, 1, CHUNCK_SIZE, fp)) > 0){
+            bytes_sent = send(sockfd, buffer, bytes_read, 0);
+            printf("%d\n", bytes_sent);
+            if ((bytes_sent < 0) || (bytes_sent != bytes_read)) {
+                printf("Error sending data");
+                exit(EXIT_FAILURE);
+            }
         }
+        
+        fseek(fp,0,SEEK_SET);
     }
-
     // Cleaning up
     fclose(fp);
     close(sockfd);

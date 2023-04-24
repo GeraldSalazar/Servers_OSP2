@@ -10,4 +10,3 @@ runs:
 	bin/generic_server
 runc:
 	bin/client 0.0.0.0 8080 /test/img.jpg 1 10
-sobel:

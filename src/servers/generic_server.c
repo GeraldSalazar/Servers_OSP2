@@ -5,6 +5,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <string.h>
+#include <sys/ioctl.h> // Incluir la cabecera para usar FIONREAD
 #include "../../include/shared.h"
 
 
@@ -58,7 +60,9 @@ int main(int argc, char const *argv[])
 
     // Listen for incoming connections
     int queue_max = 4;
-    if (listen(socket_fd, queue_max) < 0) {
+    if (listen(socket_fd, queue_max) == 0) {
+        printf("Listening\n");
+    } else {
         perror("listen");
         exit(EXIT_FAILURE);
     }
@@ -92,19 +96,38 @@ int main(int argc, char const *argv[])
 void handle_request(int socket_fd, int image_count)
 {
     // Open a file to write the image data
-    char imageName[20];
-    sprintf(imageName, "image%d_%d.jpg", getpid(), image_count);
-    printf("image: %s \n", imageName);
+    char imageName[25];
+    int r = rand() % 1000;
 
-    FILE* fp = fopen(imageName, "wb");
+    sprintf(imageName, "TestImg/image%d_%d.jpg", getpid(), r);
+    printf("image: %d \n", r);
+    FILE* fp = fopen(imageName, "a");
+    
     char buffer[CHUNCK_SIZE];
+
+    //char *endptr;
+    //char num_str[20];
+    //int fileSize = recv(socket_fd, num_str, sizeof(num_str), 0);
+    //long num = strtol(num_str, &endptr, 10); //num es el valor del tamaño de la imagen que el emisor envia
+    
+    long bytesTotales=0;
     int bytes_received, bytes_written;
+    
+    FILE *img_file = NULL;
+
+    //printf("------------FileSize-%lu------------- \n",num);
+    //dfflush(stdout);
+
     // Receive the image data in chunks and write to file
     while ((bytes_received = recv(socket_fd, buffer, CHUNCK_SIZE, 0)) > 0) {
-        bytes_written = fwrite(buffer, 1, bytes_received, fp);
-        if (bytes_written != bytes_received) {
-            printf("Error writing data\n");
-            break;
-        }
+         bytesTotales+=bytes_received;
+         printf("%d\n", bytes_received);
+         fwrite(buffer, 1, bytes_received, fp);
+         /*if (bytes_written != bytes_received) {
+             printf("Error writing data\n");
+             break;
+         }*/
     }
+
+    //fclose(fp);
 }
