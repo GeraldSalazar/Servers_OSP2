@@ -20,7 +20,7 @@
 
 // SO_REUSEPORT  ->  allows multiple sockets to bind to the same IP address and port number combination.
 // SO_REUSEADDR  ->  allows a socket to be bound to a local address that is already in use.
-void handle_request(int socket_fd, int image_count);
+void handle_request(int socket_fd, char imageName[], int image_count);
 
 int main(int argc, char const *argv[])
 {
@@ -57,7 +57,7 @@ int main(int argc, char const *argv[])
     }
 
     // Listen for incoming connections
-    int queue_max = 4;
+    int queue_max = 50;
     if (listen(socket_fd, queue_max) < 0) {
         perror("listen");
         exit(EXIT_FAILURE);
@@ -72,6 +72,7 @@ int main(int argc, char const *argv[])
     }
 
     int image_count = 0;
+    char imageName[40];
     while(1)
     {
         printf("Waiting for a connection on port %d. IP: %s\n", PORT, inet_ntoa(sin.sin_addr));
@@ -81,7 +82,8 @@ int main(int argc, char const *argv[])
             perror("accept");
             exit(EXIT_FAILURE);
         }
-        handle_request(new_socket, image_count);
+        handle_request(new_socket,imageName, image_count);
+        sobel(imageName, image_count);
         image_count++;
         close(new_socket);
     }
@@ -89,11 +91,11 @@ int main(int argc, char const *argv[])
     return 0;
 }
 
-void handle_request(int socket_fd, int image_count)
+void handle_request(int socket_fd, char imageName[], int image_count)
 {
     // Open a file to write the image data
-    char imageName[20];
-    sprintf(imageName, "image%d_%d.jpg", getpid(), image_count);
+    
+    sprintf(imageName, "TestImg/image%d_%d.png", getpid(), image_count);
     printf("image: %s \n", imageName);
 
     FILE* fp = fopen(imageName, "wb");
@@ -107,5 +109,4 @@ void handle_request(int socket_fd, int image_count)
             break;
         }
     }
-    sobel(imageName);
 }

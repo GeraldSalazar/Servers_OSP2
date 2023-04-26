@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include "file_operations.h"
 #include "image_operations.h"
+#include "Sobel.h"
 #include "math.h"
 #include "string.h"
 #include <sys/time.h>
@@ -25,7 +26,7 @@ typedef unsigned char byte;
 // true --> Vertical gradient and horizontal gradient are output
 #define INTERMEDIATE_OUTPUT false
 
-int sobel(char *inputImage_fp)
+int sobel(char *inputImage_fp, int imagecount)
 {
 	// initialize all the timevals at the beginning of the program to avoid cluttered declarations later on
 	struct timeval comp_start_load_img, comp_end_load_img;
@@ -132,8 +133,12 @@ int sobel(char *inputImage_fp)
 
 	// always output the final sobel countour
 	get_time(i_o_start_png_conversion);
+
+	char sobel_contour[100];
+	sprintf(sobel_contour,"filtered/sobel_countour_%d.png", imagecount);
+
 	output_gradient(true, countour_img,
-					gray_size, str_width, str_height, STRING_BUFFER_SIZE, "Native_Sobel/imgs_out/sobel_countour.png");
+					gray_size, str_width, str_height, STRING_BUFFER_SIZE, sobel_contour);
 	get_time(i_o_end_png_conversion);
 
 	// #############5. Step - Display the elapsed time in the different parts of the code

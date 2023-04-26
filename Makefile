@@ -9,8 +9,11 @@ bc:
 runs:
 	bin/generic_server
 runc:
-	bin/client 0.0.0.0 8080 /test/img.jpg 1 10
+	bin/client 0.0.0.0 8080 assets/Sekiro.jpg 5 1
 sobel:
 	gcc Native_Sobel/src/file_operations.c Native_Sobel/src/image_operations.c Native_Sobel/src/main.c -lm -o bin/Native_Sobel
 run_sobel:
 	bin/Native_Sobel assets/sample_1_640x427.jpg
+delete:
+	rm filtered/*.png
+	rm TestImg/*.png

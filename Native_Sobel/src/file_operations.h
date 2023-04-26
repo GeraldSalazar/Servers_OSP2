@@ -1,7 +1,7 @@
 
 #ifndef FILE_OPERATIONS_H
 #define FILE_OPERATIONS_H
-
+#include "sys/time.h"
 typedef unsigned char byte;
 
 

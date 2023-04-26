@@ -88,7 +88,7 @@ void *socket_thread(void *args){
     }
     
     // Open the image file in binary mode
-    FILE* fp = fopen(image3, "rb");
+    FILE* fp = fopen(cArgs->imageName, "rb");
     if (fp == NULL) {
         printf("Error opening file\n");
         exit(EXIT_FAILURE);
