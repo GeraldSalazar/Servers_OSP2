@@ -9,19 +9,6 @@
 #include <time.h>
 #include "../../include/shared.h"
 
-
-
-// struct sockaddr_in {
-//     sa_family_t sin_family; // Address family (should always be AF_INET)
-//     in_port_t sin_port;     // Port number (in network byte order)
-//     struct in_addr sin_addr;// IP address (in network byte order)
-//     char sin_zero[8];       // Padding to make the struct the same size as struct sockaddr
-// };
-
-// network byte order  ->  the most significant byte is transmitted first (big-endian)
-
-// SO_REUSEPORT  ->  allows multiple sockets to bind to the same IP address and port number combination.
-// SO_REUSEADDR  ->  allows a socket to be bound to a local address that is already in use.
 void handle_request(int socket_fd, int image_count);
 
 int main(int argc, char const *argv[]){
@@ -76,18 +63,19 @@ int main(int argc, char const *argv[]){
     struct dirent *ent;
     int count = 0;
 
-
-    //Numero aleatorio para las imagenes
-    int num = 0;
-    srand(time(NULL)); // Inicializar la semilla del generador de números aleatorios
+    //Text del secuencial
+    FILE* TxtSecuencial=fopen("LogFiles/SecuencialLog.txt","a");
+    
     while(1){
         printf("Waiting for a connection on port %d. IP: %s\n", PORT, inet_ntoa(sin.sin_addr));
         fflush(stdout);
+        
         // Wait and accept incoming connections and handle them
         if ((new_socket = accept(socket_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0) {
             perror("accept");
             exit(EXIT_FAILURE);
         }
+        
         int count = 0;
         dir = opendir("TestImg");
         // Cuenta el número de archivos en el directorio
@@ -99,12 +87,22 @@ int main(int argc, char const *argv[]){
         // Cierra el directorio
         closedir(dir);
 
+
         // Imprime el número de archivos y determina si hay menos de 100
         printf("El número de archivos es: %d\n", count);
         if (count < 100) {
-            // Generar un número aleatorio de 5 dígitos
-            num = rand() % 90000 + 10000;
-            handle_request(new_socket, num);
+            //Tiempo de CPU 
+            struct timespec startG1, endG1;
+            clock_gettime(CLOCK_MONOTONIC, &startG1);
+            handle_request(new_socket, count);
+            clock_gettime(CLOCK_MONOTONIC, &endG1);
+            double timeG1 = (endG1.tv_sec - startG1.tv_sec) +(endG1.tv_nsec - startG1.tv_nsec) / 1e9;
+            
+            // Escribir la info en el log file, se escribe una linea al final del archivo
+            char infoFormato[] = "G1: %d     | %f             \n";
+            fprintf(TxtSecuencial, infoFormato, new_socket, timeG1);
+            fflush(TxtSecuencial);
+
         }close(new_socket);
         
     }

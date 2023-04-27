@@ -70,9 +70,10 @@ int main(int argc, char const *argv[]){
     int count = 0;
     //struc para los parametros
     structParametros misParam;
-    //Numero aleatorio para las imagenes
-    int num = 0;
-    srand(time(NULL)); // Inicializar la semilla del generador de números aleatorios
+
+    //Text del hilos
+    FILE* TxtHilos=fopen("LogFiles/HilosLog.txt","a");
+
     while(1){
         printf("Waiting for a connection on port %d. IP: %s\n", PORTH, inet_ntoa(sin.sin_addr));
         fflush(stdout);
@@ -95,14 +96,24 @@ int main(int argc, char const *argv[]){
         // Imprime el número de archivos y determina si hay menos de 100
         printf("El número de archivos es: %d\n", count);
         if (count < 100) {
-            // Generar un número aleatorio de 5 dígitos
-            num = rand() % 90000 + 10000;
+            //Creamos el nuevo hilo
             pthread_t thread_id;
             misParam.new_socket=new_socket;
-            misParam.num=num;
+            misParam.num=count;
+                        
+            //Tiempo de CPU 
+            struct timespec startG1, endG1;
+            clock_gettime(CLOCK_MONOTONIC, &startG1);
             pthread_create(&thread_id, NULL, handle_request, (void *) &misParam);
             pthread_join(thread_id, NULL);
+            clock_gettime(CLOCK_MONOTONIC, &endG1);
+            double timeG1 = (endG1.tv_sec - startG1.tv_sec) +(endG1.tv_nsec - startG1.tv_nsec) / 1e9;
             
+            // Escribir la info en el log file, se escribe una linea al final del archivo
+            char infoFormato[] = "G1: %d     | %f             \n";
+            fprintf(TxtHilos, infoFormato, new_socket, timeG1);
+            fflush(TxtHilos);
+
         }close(new_socket);
         
     }
