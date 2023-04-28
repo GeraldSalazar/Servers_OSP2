@@ -5,8 +5,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <string.h>
-#include <sys/ioctl.h> // Incluir la cabecera para usar FIONREAD
 #include "../../include/shared.h"
 
 
@@ -24,8 +22,7 @@
 // SO_REUSEADDR  ->  allows a socket to be bound to a local address that is already in use.
 void handle_request(int socket_fd, int image_count);
 
-int main(int argc, char const *argv[])
-{
+int main(int argc, char const *argv[]){
     int socket_fd, new_socket;
     int opt = 1;
     char buffer[1024] = {0};
@@ -60,9 +57,7 @@ int main(int argc, char const *argv[])
 
     // Listen for incoming connections
     int queue_max = 4;
-    if (listen(socket_fd, queue_max) == 0) {
-        printf("Listening\n");
-    } else {
+    if (listen(socket_fd, queue_max) < 0) {
         perror("listen");
         exit(EXIT_FAILURE);
     }
@@ -76,8 +71,7 @@ int main(int argc, char const *argv[])
     }
 
     int image_count = 0;
-    while(1)
-    {
+    while(1){
         printf("Waiting for a connection on port %d. IP: %s\n", PORT, inet_ntoa(sin.sin_addr));
         fflush(stdout);
         // Wait and accept incoming connections and handle them
@@ -97,37 +91,19 @@ void handle_request(int socket_fd, int image_count)
 {
     // Open a file to write the image data
     char imageName[25];
-    int r = rand() % 1000;
+    sprintf(imageName, "TestImg/image%d_%d.jpg", getpid(), image_count);
+    printf("image: %s \n", imageName);
 
-    sprintf(imageName, "TestImg/image%d_%d.jpg", getpid(), r);
-    printf("image: %d \n", r);
-    FILE* fp = fopen(imageName, "a");
-    
+    FILE* fp = fopen(imageName, "wb");
     char buffer[CHUNCK_SIZE];
-
-    //char *endptr;
-    //char num_str[20];
-    //int fileSize = recv(socket_fd, num_str, sizeof(num_str), 0);
-    //long num = strtol(num_str, &endptr, 10); //num es el valor del tamaño de la imagen que el emisor envia
-    
-    long bytesTotales=0;
     int bytes_received, bytes_written;
-    
-    FILE *img_file = NULL;
-
-    //printf("------------FileSize-%lu------------- \n",num);
-    //dfflush(stdout);
-
     // Receive the image data in chunks and write to file
     while ((bytes_received = recv(socket_fd, buffer, CHUNCK_SIZE, 0)) > 0) {
-         bytesTotales+=bytes_received;
-         printf("%d\n", bytes_received);
-         fwrite(buffer, 1, bytes_received, fp);
-         /*if (bytes_written != bytes_received) {
-             printf("Error writing data\n");
-             break;
-         }*/
+        bytes_written = fwrite(buffer, 1, bytes_received, fp);
+        //printf("Bytes recieved: %d\n", bytes_written);
+        if (bytes_written != bytes_received) {
+            printf("Error writing data\n");
+            break;
+        }
     }
-
-    //fclose(fp);
 }
