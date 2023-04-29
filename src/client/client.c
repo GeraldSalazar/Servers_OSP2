@@ -17,6 +17,7 @@ typedef struct clientArgs
     char* imageName;
     int portNum;
     int nCycles;
+    int nThreads;
 } clientArgs;
 
 int main(int argc, char *argv[]) {
@@ -39,6 +40,7 @@ int main(int argc, char *argv[]) {
     args->imageName = imageName;
     args->portNum = port;
     args->nCycles = nCycles;
+    args->nThreads = nThreads; 
     int totalConection = nThreads*nCycles;
 
     //Text del emisor
@@ -61,16 +63,16 @@ int main(int argc, char *argv[]) {
     fprintf(TxtEmisor, infoFormato, getpid(),tipoServidor, nThreads,nCycles, totalConection);
     
     //amount of needed threads
-    pthread_t threads[totalConection];
+    pthread_t threads[nThreads];
 
-    for(int i=0; i<totalConection; i++)
+    for(int i=0; i<nThreads; i++)
     {
         if(pthread_create(&threads[i], NULL, socket_thread, (void*) args) != 0){
             printf("Error with pthread_create");
             exit(1);
         }
     }
-    for(int i=0; i<totalConection; i++)
+    for(int i=0; i<nThreads; i++)
     {
         if(pthread_join(threads[i], NULL) != 0)
         {
@@ -106,33 +108,40 @@ void *socket_thread(void *args){
         printf("Error connecting to server");
         exit(EXIT_FAILURE);
     }
-    
+    // send metadata for the charts. htonl -> Host to Network
+    int metadata[4];
+    metadata[0] = htonl(sockfd);                       // socket descriptor
+    metadata[1] = htonl(cArgs->nThreads);              // number of threads
+    metadata[2] = htonl(cArgs->nCycles);               // number of cycles
+    metadata[3] = htonl(getpid());                     // number of cycles
+    printf("--------\n [0]: %d \n [1]: %d \n [2]: %d [3]: %d \n--------\n", ntohl(metadata[0]), ntohl(metadata[1]), ntohl(metadata[2]),ntohl(metadata[3]));
+    int bytesMD_sent = send(sockfd, &metadata, sizeof(metadata), 0);
+
     // Open the image file in binary mode
     FILE* fp = fopen(cArgs->imageName, "rb");
     if (fp == NULL) {
         printf("Error opening file\n");
         exit(EXIT_FAILURE);
     }
-
     // Check the amount of bytes that need to be sent
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
     fseek(fp, 0, SEEK_SET);
     printf("file size in bytes: %ld \n", file_size);
 
-    // Sending the image in chunks
-    char buffer[CHUNCK_SIZE];
-    int bytes_read, bytes_sent;
-    while((bytes_read = fread(buffer, 1, CHUNCK_SIZE, fp)) > 0){
-        bytes_sent = send(sockfd, buffer, bytes_read, 0);
-        if ((bytes_sent < 0) || (bytes_sent != bytes_read)) {
-            printf("Error sending data");
-            exit(EXIT_FAILURE);
+    for(int i=0; i<cArgs->nCycles; i++){
+        // Sending the image in chunks
+        char buffer[CHUNCK_SIZE];
+        int bytes_read, bytes_sent;
+        while((bytes_read = fread(buffer, 1, CHUNCK_SIZE, fp)) > 0){
+            bytes_sent = send(sockfd, buffer, bytes_read, 0);
+            if ((bytes_sent < 0) || (bytes_sent != bytes_read)) {
+                printf("Error sending data");
+                exit(EXIT_FAILURE);
+            }
         }
     }
-
     // Cleaning up
     fclose(fp);
     close(sockfd);
 }
-

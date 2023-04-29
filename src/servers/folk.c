@@ -10,7 +10,7 @@
 #include <pthread.h>
 #include "../../include/shared.h"
 
-void handle_request(int socket_fd, int image_count);
+void handle_request(int socket_fd, int image_count,FILE* Txt);
 
 int main(int argc, char const *argv[]){
     int socket_fd, new_socket;
@@ -20,8 +20,8 @@ int main(int argc, char const *argv[]){
     struct sockaddr_in address;
     memset(&address, 0, sizeof(address));
     int addrlen = sizeof(address);
-    address.sin_family = AF_INET;               //represents the address family for IPv4
-    address.sin_addr.s_addr = inet_addr(IPF);              //any IP address on the local machine.
+    address.sin_family = AF_INET;                //represents the address family for IPv4
+    address.sin_addr.s_addr = inet_addr(IPF);    //any IP address on the local machine.
     address.sin_port = htons( PORTF );           //takes a 16-bit integer value in host byte order as its argument, and returns the corresponding value in network byte order.
 
     // Create socket file descriptor
@@ -89,22 +89,10 @@ int main(int argc, char const *argv[]){
         // Imprime el número de archivos y determina si hay menos de 100
         printf("El número de archivos es: %d\n", count);
         if (count < 100) {
-            // Generar un número aleatorio de 5 dígitos
-            pid_t pid = fork();
-            if(pid == 0){
-                // Proceso hijo 
-                
-                //Tiempo de CPU 
-                struct timespec startG1, endG1;
-                clock_gettime(CLOCK_MONOTONIC, &startG1);
-                handle_request(new_socket, count);
-                clock_gettime(CLOCK_MONOTONIC, &endG1);
-                double timeG1 = (endG1.tv_sec - startG1.tv_sec) +(endG1.tv_nsec - startG1.tv_nsec) / 1e9;
-                
-                // Escribir la info en el log file, se escribe una linea al final del archivo
-                char infoFormato[] = "G1: %d     | %f             \n";
-                fprintf(TxtHeavy, infoFormato, new_socket, timeG1);
-                fflush(TxtHeavy);
+            pid_t pid = fork();        
+            if(pid == 0){// Proceso hijo 
+                handle_request(new_socket, count, TxtHeavy);
+                exit(0);
             }
         }close(new_socket);
         
@@ -113,11 +101,25 @@ int main(int argc, char const *argv[]){
     return 0;
 }
 
-void handle_request(int socket_fd, int image_count)
+void handle_request(int socket_fd, int image_count,FILE* Txt)
 {
+    //Tiempo inicial del CPU 
+    struct timespec start, end;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    
+    // First, read the metadata from client
+    int metadata[4];
+    recv(socket_fd, &metadata, sizeof(metadata), 0);
+    int socketD = ntohl(metadata[0]);
+    int nThreads = ntohl(metadata[1]);
+    int nCycles = ntohl(metadata[2]);
+    int idProcess= ntohl(metadata[3]);
+
+    printf("--------\n [0]: %d \n [1]: %d \n [2]: %d [3]: %d \n--------\n", socketD, nThreads, nCycles,idProcess);
+    
     // Open a file to write the image data
     char imageName[25];
-    sprintf(imageName, "TestImg/image%d.jpg",image_count);
+    sprintf(imageName, "TestImg/image%d.jpg", image_count);
     printf("image: %s \n", imageName);
     FILE* fp = fopen(imageName, "wb");
 
@@ -131,4 +133,43 @@ void handle_request(int socket_fd, int image_count)
             break;
         }
     }
+
+    //
+    //FILTRO Y LOS N-CICLOS
+    //
+    
+    //Tiempo final
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    double time = (end.tv_sec - start.tv_sec) +(end.tv_nsec - start.tv_nsec) / 1e9;
+    
+    //Toma de la memoria
+    char bufferTest[50];
+    char command[30];
+    sprintf(command, "ps -p %d -o rss", getpid());
+    printf("--------------%s---------------",command);
+    FILE* fpa = popen(command, "r");
+    if (fpa == NULL) {
+        printf("Failed to execute command\n" );
+        exit(1);
+    }
+    fread(bufferTest, sizeof(bufferTest), 30, fpa);
+
+    size_t newline_pos = strcspn(bufferTest, "\n"); // Find position of newline
+    if (newline_pos < strlen(bufferTest)) { // If newline found
+        bufferTest[newline_pos] = ' '; // Overwrite with null terminator
+    }
+
+    //Memoria final
+    int rss;
+    if (sscanf(bufferTest, "   RSS  %d", &rss) != 1) {
+        printf("Failed to parse output of command\n");
+        exit(1);
+    }
+    printf("Output of ls command: %d\n", rss);
+    pclose(fpa);
+
+    // Escribir la info en el log file, se escribe una linea al final del archivo
+    char infoFormato[] = "Tiempo: %f, IDE: %d, SocketID:%d, Memoria:%d             \n";
+    fprintf(Txt, infoFormato, time,idProcess,socketD,rss);
+    fflush(Txt);
 }

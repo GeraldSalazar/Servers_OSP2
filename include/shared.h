@@ -4,7 +4,7 @@
 #define image4 "assets/sample_4_640x960.jpg"
 
 //Secuencial
-#define PORT 8080
+#define PORT 8000
 #define IP "0.0.0.0"
 
 //Hilos
@@ -13,6 +13,6 @@
 
 //Folk
 #define PORTF 5000
-#define IPF "127.0.0.2"
+#define IPF "127.0.1.2"
 
 #define CHUNCK_SIZE 8192

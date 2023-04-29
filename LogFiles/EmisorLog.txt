@@ -1,1 +1,5 @@
-ID: 34480 | S: 1 | Num hilos: 1 | Num ciclos: 2 | Total: 2
+ID: 7057 | S: 3 | Num hilos: 4 | Num ciclos: 1 | Total: 8
+ID: 10348 | S: 2 | Num hilos: 1 | Num ciclos: 2 | Total: 2
+ID: 10354 | S: 2 | Num hilos: 1 | Num ciclos: 2 | Total: 2
+ID: 10626 | S: 1 | Num hilos: 1 | Num ciclos: 2 | Total: 2
+ID: 10650 | S: 1 | Num hilos: 1 | Num ciclos: 2 | Total: 2

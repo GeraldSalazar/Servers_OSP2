@@ -1,4 +1,2 @@
-G1: 5     | 0.001343             
-G1: 5     | 0.001535             
-G1: 5     | 0.004388             
-G1: 5     | 0.001404             
+Tiempo: 0.003406,IDE: 10626, SocketID:4, Memoria:972             
+Tiempo: 0.000946,IDE: 10650, SocketID:4, Memoria:1164             

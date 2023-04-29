@@ -13,6 +13,7 @@
 typedef struct {
     int new_socket;
     int num;
+    FILE* Txt;
 } structParametros;
 
 void *handle_request(void *parametro);
@@ -73,15 +74,17 @@ int main(int argc, char const *argv[]){
 
     //Text del hilos
     FILE* TxtHilos=fopen("LogFiles/HilosLog.txt","a");
-
+    misParam.Txt=TxtHilos;
+    
     while(1){
-        printf("Waiting for a connection on port %d. IP: %s\n", PORTH, inet_ntoa(sin.sin_addr));
+        printf("\nWaiting for a connection on port %d. IP: %s\n", PORTH, inet_ntoa(sin.sin_addr));
         fflush(stdout);
         // Wait and accept incoming connections and handle them
         if ((new_socket = accept(socket_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0) {
             perror("accept");
             exit(EXIT_FAILURE);
         }
+        
         int count = 0;
         dir = opendir("TestImg");
         // Cuenta el número de archivos en el directorio
@@ -94,27 +97,19 @@ int main(int argc, char const *argv[]){
         closedir(dir);
 
         // Imprime el número de archivos y determina si hay menos de 100
-        printf("El número de archivos es: %d\n", count);
+        printf("\nEl número de archivos es: %d\n", count);
         if (count < 100) {
-            //Creamos el nuevo hilo
-            pthread_t thread_id;
+            
             misParam.new_socket=new_socket;
             misParam.num=count;
-                        
-            //Tiempo de CPU 
-            struct timespec startG1, endG1;
-            clock_gettime(CLOCK_MONOTONIC, &startG1);
+
+            //Creamos el nuevo hilo
+            pthread_t thread_id; 
             pthread_create(&thread_id, NULL, handle_request, (void *) &misParam);
             pthread_join(thread_id, NULL);
-            clock_gettime(CLOCK_MONOTONIC, &endG1);
-            double timeG1 = (endG1.tv_sec - startG1.tv_sec) +(endG1.tv_nsec - startG1.tv_nsec) / 1e9;
-            
-            // Escribir la info en el log file, se escribe una linea al final del archivo
-            char infoFormato[] = "G1: %d     | %f             \n";
-            fprintf(TxtHilos, infoFormato, new_socket, timeG1);
-            fflush(TxtHilos);
 
-        }close(new_socket);
+        }
+        close(new_socket);
         
     }
     close(socket_fd);
@@ -125,9 +120,23 @@ void *handle_request(void *parametro)
 {
     structParametros *misParametro = (structParametros *) parametro;
     
+    //Tiempo inicial del CPU 
+    struct timespec start, end;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    
+    // First, read the metadata from client
+    int metadata[4];
+    recv(misParametro->new_socket, &metadata, sizeof(metadata), 0);
+    int socketD = ntohl(metadata[0]);
+    int nThreads = ntohl(metadata[1]);
+    int nCycles = ntohl(metadata[2]);
+    int idProcess= ntohl(metadata[3]);
+
+    printf("--------\n [0]: %d \n [1]: %d \n [2]: %d [3]: %d \n--------\n", socketD, nThreads, nCycles,idProcess);
+    
     // Open a file to write the image data
     char imageName[25];
-    sprintf(imageName, "TestImg/image%d.jpg", misParametro->num);
+    sprintf(imageName, "TestImg/image%d.jpg",misParametro->num);
     printf("image: %s \n", imageName);
     FILE* fp = fopen(imageName, "wb");
 
@@ -141,4 +150,43 @@ void *handle_request(void *parametro)
             break;
         }
     }
+
+    //
+    //FILTRO Y LOS N-CICLOS
+    //
+
+    //Tiempo final
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    double time = (end.tv_sec - start.tv_sec) +(end.tv_nsec - start.tv_nsec) / 1e9;
+    
+    //Toma de la memoria
+    char bufferTest[50];
+    char command[30];
+    sprintf(command, "ps -p %d -o rss", getpid());
+    printf("--------------%s---------------",command);
+    FILE* fpa = popen(command, "r");
+    if (fpa == NULL) {
+        printf("Failed to execute command\n" );
+        exit(1);
+    }
+    fread(bufferTest, sizeof(bufferTest), 30, fpa);
+
+    size_t newline_pos = strcspn(bufferTest, "\n"); // Find position of newline
+    if (newline_pos < strlen(bufferTest)) { // If newline found
+        bufferTest[newline_pos] = ' '; // Overwrite with null terminator
+    }
+
+    //Memoria final
+    int rss;
+    if (sscanf(bufferTest, "   RSS  %d", &rss) != 1) {
+        printf("Failed to parse output of command\n");
+        exit(1);
+    }
+    printf("Output of ls command: %d\n", rss);
+    pclose(fpa);
+
+    // Escribir la info en el log file, se escribe una linea al final del archivo
+    char infoFormato[] = "Tiempo: %f,IDE: %d, SocketID:%d, Memoria:%d             \n";
+    fprintf(misParametro->Txt, infoFormato,time,idProcess,socketD,rss);
+    fflush(misParametro->Txt);
 }

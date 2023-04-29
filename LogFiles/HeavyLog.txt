@@ -1,0 +1,2 @@
+Tiempo: 0.001311, IDE: 10348, SocketID:4, Memoria:1372             
+Tiempo: 0.001006, IDE: 10354, SocketID:4, Memoria:1372             
