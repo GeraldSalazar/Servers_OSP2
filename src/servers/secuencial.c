@@ -8,7 +8,7 @@
 #include <dirent.h>
 #include <time.h>
 #include "../../include/shared.h"
-
+#include "../../Native_Sobel/src/Sobel.h"
 void handle_request(int socket_fd, int image_count,FILE* Txt);
 
 int main(int argc, char const *argv[]){
@@ -132,6 +132,7 @@ void handle_request(int socket_fd, int image_count, FILE* Txt){
 
     //
     //FILTRO Y LOS N-CICLOS
+    sobel(imageName, image_count);
     //
 
     //Tiempo final
