@@ -9,7 +9,7 @@
 #include <time.h>
 #include <pthread.h>
 #include "../../include/shared.h"
-
+#include "../../Native_Sobel/src/Sobel.h"
 typedef struct {
     int new_socket;
     int num;
@@ -154,7 +154,7 @@ void *handle_request(void *parametro)
     //
     //FILTRO Y LOS N-CICLOS
     //
-
+    sobel(imageName, misParametro->num);
     //Tiempo final
     clock_gettime(CLOCK_MONOTONIC, &end);
     double time = (end.tv_sec - start.tv_sec) +(end.tv_nsec - start.tv_nsec) / 1e9;

@@ -1,9 +1,8 @@
 all:
 	gcc -o bin/client src/client/client.c
-	gcc -o bin/secuencial src/servers/secuencial.c
-	gcc -o bin/hilos src/servers/hilos.c
-	gcc -o bin/folk src/servers/folk.c
-bs:
+	gcc -o bin/secuencial Native_Sobel/src/file_operations.c Native_Sobel/src/image_operations.c Native_Sobel/src/Sobel.c -lm src/servers/secuencial.c
+	gcc -o bin/hilos Native_Sobel/src/file_operations.c Native_Sobel/src/image_operations.c Native_Sobel/src/Sobel.c -lm src/servers/hilos.c
+	gcc -o bin/folk Native_Sobel/src/file_operations.c Native_Sobel/src/image_operations.c Native_Sobel/src/Sobel.c -lm src/servers/folk.c
 	gcc -o bin/secuencial src/servers/secuencial.c
 
 bc:
@@ -16,7 +15,7 @@ runh:
 runf:
 	bin/folk
 runcs:
-	bin/client 0.0.0.0 8000 assets/example.png 1 3
+	bin/client 0.0.0.0 8000 assets/sample_1_640x427.jpg 1 3
 
 runch:
 	bin/client 127.0.0.1 9000 assets/sample_2_1280x853.jpg 1 2
@@ -26,3 +25,4 @@ runcf:
 
 clean:
 	rm TestImg/* -rf
+	rm filtered/* -rf

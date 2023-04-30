@@ -3,3 +3,8 @@ ID: 10348 | S: 2 | Num hilos: 1 | Num ciclos: 2 | Total: 2
 ID: 10354 | S: 2 | Num hilos: 1 | Num ciclos: 2 | Total: 2
 ID: 10626 | S: 1 | Num hilos: 1 | Num ciclos: 2 | Total: 2
 ID: 10650 | S: 1 | Num hilos: 1 | Num ciclos: 2 | Total: 2
+ID: 4682 | S: 3 | Num hilos: 1 | Num ciclos: 3 | Total: 3
+ID: 4759 | S: 3 | Num hilos: 1 | Num ciclos: 3 | Total: 3
+ID: 4868 | S: 1 | Num hilos: 1 | Num ciclos: 2 | Total: 2
+ID: 4892 | S: 1 | Num hilos: 1 | Num ciclos: 2 | Total: 2
+ID: 4963 | S: 2 | Num hilos: 1 | Num ciclos: 2 | Total: 2
