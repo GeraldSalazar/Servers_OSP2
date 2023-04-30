@@ -164,15 +164,15 @@ void handle_request(int socket_fd, int image_count, FILE* Txt){
 
     //Memoria final
     int rss;
-    if (sscanf(bufferTest, "   RSS  %d", &rss) != 1) {
+    if (sscanf(bufferTest, "   RSS %d", &rss) != 1) {
         printf("Failed to parse output of command\n");
         exit(1);
     }
-    printf("Output of ls command: %d\n", rss);
+    printf("%d\n", rss);
     pclose(fpa);
 
     // Escribir la info en el log file, se escribe una linea al final del archivo
-    char infoFormato[] = "Tiempo: %f,IDE: %d, SocketID:%d, Memoria:%d             \n";
+    char infoFormato[] = "%f,%d,%d,%d\n";
     fprintf(Txt, infoFormato, time,idProcess,socketD,rss);
     fflush(Txt);
 }

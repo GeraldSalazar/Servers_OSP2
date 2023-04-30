@@ -9,7 +9,7 @@
 #include <time.h>
 #include <pthread.h>
 #include "../../include/shared.h"
-#include "../../Native_Sobel/src/Sobel.h"
+
 typedef struct {
     int new_socket;
     int num;
@@ -151,7 +151,6 @@ void *handle_request(void *parametro)
             break;
         }
     }
-
     //
     //FILTRO Y LOS N-CICLOS
     //
@@ -194,7 +193,7 @@ void *handle_request(void *parametro)
     pclose(fpa);
 
     // Escribir la info en el log file, se escribe una linea al final del archivo
-    char infoFormato[] = "Tiempo: %f,IDE: %d, SocketID:%d, Memoria:%d             \n";
+    char infoFormato[] = "%f,%d,%d,%d\n";
     fprintf(misParametro->Txt, infoFormato,time,idProcess,socketD,rss);
     fflush(misParametro->Txt);
 }

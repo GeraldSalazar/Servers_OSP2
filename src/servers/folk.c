@@ -9,7 +9,6 @@
 #include <time.h>
 #include <pthread.h>
 #include "../../include/shared.h"
-#include "../../Native_Sobel/src/Sobel.h"
 
 void handle_request(int socket_fd, int image_count,FILE* Txt);
 
@@ -178,7 +177,7 @@ void handle_request(int socket_fd, int image_count,FILE* Txt)
     pclose(fpa);
 
     // Escribir la info en el log file, se escribe una linea al final del archivo
-    char infoFormato[] = "Tiempo: %f, IDE: %d, SocketID:%d, Memoria:%d             \n";
+    char infoFormato[] = "%f,%d,%d,%d\n";
     fprintf(Txt, infoFormato, time,idProcess,socketD,rss);
     fflush(Txt);
 }
