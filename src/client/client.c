@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Escribir la info en el log file, se escribe una linea al final del archivo
-    char infoFormato[] = "ID: %d | S: %d | Num hilos: %d | Num ciclos: %d | Total: %d\n";
+    char infoFormato[] = "%d,%d,%d,%d,%d\n";
     fprintf(TxtEmisor, infoFormato, getpid(),tipoServidor, nThreads,nCycles, totalConection);
     
     //amount of needed threads

@@ -137,7 +137,7 @@ void handle_request(int socket_fd, int image_count,FILE* Txt)
     //
     //FILTRO Y LOS N-CICLOS
     //
-    
+
     //Tiempo final
     clock_gettime(CLOCK_MONOTONIC, &end);
     double time = (end.tv_sec - start.tv_sec) +(end.tv_nsec - start.tv_nsec) / 1e9;
@@ -169,7 +169,7 @@ void handle_request(int socket_fd, int image_count,FILE* Txt)
     pclose(fpa);
 
     // Escribir la info en el log file, se escribe una linea al final del archivo
-    char infoFormato[] = "Tiempo: %f, IDE: %d, SocketID:%d, Memoria:%d             \n";
+    char infoFormato[] = "%f,%d,%d,%d\n";
     fprintf(Txt, infoFormato, time,idProcess,socketD,rss);
     fflush(Txt);
 }
