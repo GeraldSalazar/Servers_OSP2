@@ -15,13 +15,13 @@ runh:
 runf:
 	bin/folk
 runcs:
-	bin/client 0.0.0.0 8000 assets/sample_1_640x427.jpg 1 3
+	bin/client 0.0.0.0 8000 assets/sample_1_640x427.jpg 3 3
 
 runch:
-	bin/client 127.0.0.1 9000 assets/sample_2_1280x853.jpg 1 2
+	bin/client 127.0.0.1 9000 assets/sample_2_1280x853.jpg 2 2
 
 runcf:
-	bin/client 127.0.1.2 5000 assets/sample_2_1280x853.jpg 1 2
+	bin/client 127.0.1.2 5000 assets/sample_2_1280x853.jpg 2 2
 
 clean:
 	rm TestImg/* -rf

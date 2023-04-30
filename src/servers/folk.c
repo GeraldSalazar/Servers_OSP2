@@ -120,7 +120,8 @@ void handle_request(int socket_fd, int image_count,FILE* Txt)
     
     // Open a file to write the image data
     char imageName[40];
-    sprintf(imageName, "TestImg/image%d.jpg", image_count);
+    int init_value = 0;
+    sprintf(imageName, "TestImg/image%d_%d.jpg", image_count, init_value);
     printf("image: %s \n", imageName);
     FILE* fp = fopen(imageName, "wb");
 
@@ -137,10 +138,15 @@ void handle_request(int socket_fd, int image_count,FILE* Txt)
 
     //
     //FILTRO Y LOS N-CICLOS
-    //
-    
-    sobel(imageName, image_count);
-    
+    sobel(imageName, image_count, init_value);
+    // formato de nombre de imagen: TestImg/imagen_thread_iteracion.jpg
+    for(int i = 1; i < nCycles; i++){
+        sobel(imageName, image_count, i);
+
+    }
+
+    fclose(fp);
+
     //Tiempo final
     clock_gettime(CLOCK_MONOTONIC, &end);
     double time = (end.tv_sec - start.tv_sec) +(end.tv_nsec - start.tv_nsec) / 1e9;

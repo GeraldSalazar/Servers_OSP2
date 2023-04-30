@@ -2,3 +2,10 @@ Tiempo: 0.137313, IDE: 9773, SocketID:4, Memoria:1656
 Tiempo: 0.093155, IDE: 9773, SocketID:5, Memoria:1840
 Tiempo: 0.034569,IDE: 4682, SocketID:4, Memoria:1312             
 Tiempo: 0.831590,IDE: 4759, SocketID:4, Memoria:3204             
+Tiempo: 0.373642,IDE: 5963, SocketID:4, Memoria:3116             
+Tiempo: 0.347180,IDE: 6212, SocketID:4, Memoria:3124             
+Tiempo: 0.367653,IDE: 6325, SocketID:4, Memoria:3184             
+Tiempo: 1.409615,IDE: 6598, SocketID:4, Memoria:5208             
+Tiempo: 1.106400,IDE: 6800, SocketID:4, Memoria:5072             
+Tiempo: 1.212694,IDE: 6800, SocketID:5, Memoria:7612             
+Tiempo: 1.421945,IDE: 6800, SocketID:4, Memoria:10024             

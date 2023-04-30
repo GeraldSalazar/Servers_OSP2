@@ -1,3 +1,7 @@
 Tiempo: 0.001311, IDE: 10348, SocketID:4, Memoria:1372             
 Tiempo: 0.001006, IDE: 10354, SocketID:4, Memoria:1372             
 Tiempo: 0.886419, IDE: 4963, SocketID:4, Memoria:5104             
+Tiempo: 4.236324, IDE: 2546, SocketID:5, Memoria:12392             
+Tiempo: 4.279633, IDE: 2546, SocketID:4, Memoria:12392             
+Tiempo: 2.327222, IDE: 2625, SocketID:5, Memoria:12392             
+Tiempo: 2.350445, IDE: 2625, SocketID:4, Memoria:12392             

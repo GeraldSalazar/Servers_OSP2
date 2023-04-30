@@ -135,8 +135,9 @@ void *handle_request(void *parametro)
     printf("--------\n [0]: %d \n [1]: %d \n [2]: %d [3]: %d \n--------\n", socketD, nThreads, nCycles,idProcess);
     
     // Open a file to write the image data
-    char imageName[25];
-    sprintf(imageName, "TestImg/image%d.jpg",misParametro->num);
+    char imageName[40];
+    int init_value = 0;
+    sprintf(imageName, "TestImg/image%d_%d.jpg", misParametro->num, init_value);
     printf("image: %s \n", imageName);
     FILE* fp = fopen(imageName, "wb");
 
@@ -154,7 +155,14 @@ void *handle_request(void *parametro)
     //
     //FILTRO Y LOS N-CICLOS
     //
-    sobel(imageName, misParametro->num);
+    sobel(imageName,  misParametro->num, init_value);
+    // formato de nombre de imagen: TestImg/imagen_thread_iteracion.jpg
+    for(int i = 1; i < nCycles; i++){
+        sobel(imageName,  misParametro->num, i);
+
+    }
+
+    fclose(fp); 
     //Tiempo final
     clock_gettime(CLOCK_MONOTONIC, &end);
     double time = (end.tv_sec - start.tv_sec) +(end.tv_nsec - start.tv_nsec) / 1e9;

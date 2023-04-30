@@ -26,7 +26,7 @@ typedef unsigned char byte;
 // true --> Vertical gradient and horizontal gradient are output
 #define INTERMEDIATE_OUTPUT false
 
-int sobel(char *inputImage_fp, int imagecount)
+int sobel(char *inputImage_fp, int imagecount, int nCycle)
 {
 	// initialize all the timevals at the beginning of the program to avoid cluttered declarations later on
 	struct timeval comp_start_load_img, comp_end_load_img;
@@ -47,7 +47,7 @@ int sobel(char *inputImage_fp, int imagecount)
 
 	// Specify the input image. Formats supported: png, jpg, GIF.
 
-	char *file_output_RGB = "Native_Sobel/imgs_out/image.rgb";
+	char *file_output_RGB = "Native_Sobel/imgs_out/image_.rgb";
 	char *png_strings[4] = {"convert ", inputImage_fp, " ", file_output_RGB};
 	char *str_PNG_to_RGB = array_strings_to_string(png_strings, 4, STRING_BUFFER_SIZE);
 
@@ -135,7 +135,7 @@ int sobel(char *inputImage_fp, int imagecount)
 	get_time(i_o_start_png_conversion);
 
 	char sobel_contour[100];
-	sprintf(sobel_contour,"filtered/sobel_countour_%d.png", imagecount);
+	sprintf(sobel_contour,"filtered/sobel_countour_%d_%d.png", imagecount, nCycle);
 
 	output_gradient(true, countour_img,
 					gray_size, str_width, str_height, STRING_BUFFER_SIZE, sobel_contour);

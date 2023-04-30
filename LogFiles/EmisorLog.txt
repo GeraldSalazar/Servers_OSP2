@@ -8,3 +8,12 @@ ID: 4759 | S: 3 | Num hilos: 1 | Num ciclos: 3 | Total: 3
 ID: 4868 | S: 1 | Num hilos: 1 | Num ciclos: 2 | Total: 2
 ID: 4892 | S: 1 | Num hilos: 1 | Num ciclos: 2 | Total: 2
 ID: 4963 | S: 2 | Num hilos: 1 | Num ciclos: 2 | Total: 2
+ID: 5963 | S: 3 | Num hilos: 1 | Num ciclos: 3 | Total: 3
+ID: 6212 | S: 3 | Num hilos: 1 | Num ciclos: 3 | Total: 3
+ID: 6312 | S: 3 | Num hilos: 1 | Num ciclos: 3 | Total: 3
+ID: 6325 | S: 3 | Num hilos: 1 | Num ciclos: 3 | Total: 3
+ID: 6598 | S: 3 | Num hilos: 1 | Num ciclos: 3 | Total: 3
+ID: 6800 | S: 3 | Num hilos: 3 | Num ciclos: 3 | Total: 9
+ID: 7119 | S: 1 | Num hilos: 2 | Num ciclos: 2 | Total: 4
+ID: 2546 | S: 2 | Num hilos: 2 | Num ciclos: 2 | Total: 4
+ID: 2625 | S: 2 | Num hilos: 2 | Num ciclos: 2 | Total: 4
