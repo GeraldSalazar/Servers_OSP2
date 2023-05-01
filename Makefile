@@ -26,6 +26,9 @@ runch:
 runcf:
 	bin/client 127.0.0.2 5000 assets/sample_2_1280x853.jpg 2 2
 
+visualizador:
+	python3 src/visualizador.py
+
 clean:
 	rm TestImg/* -rf
 	rm filtered/* -rf

@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 #include <dirent.h>
 #include <time.h>
+#include <sys/time.h>
 #include <pthread.h>
 #include <sys/wait.h>
 #include "../../include/shared.h"
@@ -66,8 +67,18 @@ int main(int argc, char const *argv[]){
     struct dirent *ent;
     int count = 0;
 
-    //Text del Folk
-    FILE* TxtHeavy=fopen("LogFiles/HeavyLog.txt","a");
+    FILE* TxtHeavy;
+    //Clear text del Folk
+    TxtHeavy=fopen("LogFiles/HeavyLog.txt","w");
+    fclose(TxtHeavy);
+    
+    TxtHeavy=fopen("LogFiles/HeavyLog.txt","a");
+    char infoFormato[] = "%s,%s,%s,%s,%s\n";
+    fprintf(TxtHeavy, infoFormato, "Tiempo", "IDE", "SocketID","Memoria","Bytes");
+    fclose(TxtHeavy);
+
+    //uso normal
+    TxtHeavy=fopen("LogFiles/HeavyLog.txt","a");
 
     while(1){
         printf("Waiting for a connection on port %d. IP: %s\n", PORTF, inet_ntoa(sin.sin_addr));
@@ -130,25 +141,40 @@ void handle_request(int socket_fd, int image_count,FILE* Txt)
     FILE* fp = fopen(imageName, "wb");
 
     char buffer[CHUNCK_SIZE];
-    int bytes_received, bytes_written;
+    int bytes_received, bytes_written,total_bytes_received;
+    double bytes_per_sec;
+
+    //TIME//
+    struct timeval current_time, last_time;
 
     // Receive the image data in chunks and write to file
     // N-Ciclos
     for(int i = 0; i < nCycles; i++){
-
         if(image_count < 100){
+            gettimeofday(&last_time, NULL);
             while ((bytes_received = recv(socket_fd, buffer, CHUNCK_SIZE, 0)) > 0) {
                 bytes_written = fwrite(buffer, 1, bytes_received, fp);
+                total_bytes_received += bytes_received;
                 if (bytes_written != bytes_received) {
                     printf("Error writing data\n");
                     break;
                 }
             }
+            gettimeofday(&current_time, NULL);
+            double time_diff = (current_time.tv_sec - last_time.tv_sec) + (current_time.tv_usec - last_time.tv_usec) / 1e6;
+            bytes_per_sec += total_bytes_received / time_diff;
+            
+            total_bytes_received = 0;
+            last_time = current_time;
+
             sobel(imageName, image_count);
             image_count++;
         }
     }
     fclose(fp);
+
+    //El promedio de bytes recibidos por los nThreads
+    bytes_per_sec /=nThreads;
 
     //Tiempo final
     clock_gettime(CLOCK_MONOTONIC, &end);
@@ -180,7 +206,7 @@ void handle_request(int socket_fd, int image_count,FILE* Txt)
     pclose(fpa);
 
     // Escribir la info en el log file, se escribe una linea al final del archivo
-    char infoFormato[] = "%f,%d,%d,%d\n";
-    fprintf(Txt, infoFormato, time,idProcess,socketD,rss);
+    char infoFormato[] = "%f,%d,%d,%d,%f\n";
+    fprintf(Txt, infoFormato, time,idProcess,socketD,rss,bytes_per_sec);
     fflush(Txt);
 }

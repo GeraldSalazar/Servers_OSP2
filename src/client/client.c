@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
 
     //Text del emisor
     FILE* TxtEmisor=fopen("LogFiles/EmisorLog.txt","a");
-    
+        
     //0 secuencial, 1 hilos, 2 heavy y 3 preheavy
     int tipoServidor;
     if(port == 8080){

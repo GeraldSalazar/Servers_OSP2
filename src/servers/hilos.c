@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 #include <dirent.h>
 #include <time.h>
+#include <sys/time.h>
 #include <pthread.h>
 #include "../../include/shared.h"
 #include "../../Native_Sobel/src/Sobel.h"
@@ -74,7 +75,20 @@ int main(int argc, char const *argv[]){
     structParametros misParam;
 
     //Text del hilos
-    FILE* TxtHilos=fopen("LogFiles/HilosLog.txt","a");
+    FILE* TxtHilos;
+
+    //Clear text del hilos
+    TxtHilos=fopen("LogFiles/HilosLog.txt","w");
+    fclose(TxtHilos);
+    
+    //Ponemos los headers
+    TxtHilos = fopen("LogFiles/HilosLog.txt","a");
+    char infoFormato[] = "%s,%s,%s,%s,%s\n";
+    fprintf(TxtHilos, infoFormato, "Tiempo", "IDE", "SocketID","Memoria","Bytes");
+    fclose(TxtHilos);
+
+    //uso normal
+    TxtHilos = fopen("LogFiles/HilosLog.txt","a");
     misParam.Txt=TxtHilos;
     
     while(1){
@@ -143,25 +157,41 @@ void *handle_request(void *parametro)
     FILE* fp = fopen(imageName, "wb");
         
     char buffer[CHUNCK_SIZE];
-    int bytes_received, bytes_written;
+    int bytes_received, bytes_written,total_bytes_received;
+    double bytes_per_sec;
 
+    //TIME//
+    struct timeval current_time, last_time;
 
     //N-Ciclos
     for(int i = 0; i < nCycles; i++){
         if(misParametro->num < 100){
+
+            gettimeofday(&last_time, NULL);
             while ((bytes_received = recv(misParametro->new_socket, buffer, CHUNCK_SIZE, 0)) > 0) {
                 bytes_written = fwrite(buffer, 1, bytes_received, fp);
+                total_bytes_received += bytes_received;
                 if (bytes_written != bytes_received) {
                     printf("Error writing data\n");
                     break;
                 }
             }
+            gettimeofday(&current_time, NULL);
+            double time_diff = (current_time.tv_sec - last_time.tv_sec) + (current_time.tv_usec - last_time.tv_usec) / 1e6;
+            bytes_per_sec += total_bytes_received / time_diff;
+            
+            total_bytes_received = 0;
+            last_time = current_time;
+            
             sobel(imageName, misParametro->num);
             misParametro->num++;
         }
     }
-    
     fclose(fp);
+
+    //El promedio de bytes recibidos por los nThreads
+    bytes_per_sec /=nThreads;
+    
     //Tiempo final
     clock_gettime(CLOCK_MONOTONIC, &end);
     double time = (end.tv_sec - start.tv_sec) +(end.tv_nsec - start.tv_nsec) / 1e9;
@@ -192,7 +222,7 @@ void *handle_request(void *parametro)
     pclose(fpa);
 
     // Escribir la info en el log file, se escribe una linea al final del archivo
-    char infoFormato[] = "%f,%d,%d,%d\n";
-    fprintf(misParametro->Txt, infoFormato,time,idProcess,socketD,rss);
+    char infoFormato[] = "%f,%d,%d,%d,%f\n";
+    fprintf(misParametro->Txt, infoFormato,time,idProcess,socketD,rss,bytes_per_sec);
     fflush(misParametro->Txt);
 }

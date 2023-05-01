@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 #include <dirent.h>
 #include <time.h>
+#include <sys/time.h>
 #include "../../include/shared.h"
 #include "../../Native_Sobel/src/Sobel.h"
 
@@ -65,8 +66,22 @@ int main(int argc, char const *argv[]){
     int count = 0;
 
     //Text del secuencial
-    FILE* TxtSecuencial=fopen("LogFiles/SecuencialLog.txt","a");
+    FILE* TxtSecuencial;
+
+    //Clear text del Folk
+    TxtSecuencial=fopen("LogFiles/SecuencialLog.txt","w");
+    fclose(TxtSecuencial);
     
+    //Ponemos los headers
+    TxtSecuencial=fopen("LogFiles/SecuencialLog.txt","a");
+    char infoFormato[] = "%s,%s,%s,%s,%s\n";
+    fprintf(TxtSecuencial, infoFormato, "Tiempo", "IDE", "SocketID","Memoria","Bytes");
+    fclose(TxtSecuencial);
+    
+    //uso normal
+    TxtSecuencial=fopen("LogFiles/SecuencialLog.txt","a");
+
+
     while(1){
         printf("\nWaiting for a connection on port %d. IP: %s\n", PORT, inet_ntoa(sin.sin_addr));
         fflush(stdout);
@@ -79,6 +94,7 @@ int main(int argc, char const *argv[]){
 
         int count = 0;
         dir = opendir("filtered");
+        
         // Cuenta el número de archivos en el directorio
         while ((ent = readdir(dir)) != NULL) {
             if (ent->d_type == DT_REG) { // DT_REG es un archivo regular
@@ -89,7 +105,8 @@ int main(int argc, char const *argv[]){
         closedir(dir);
 
         // Imprime el número de archivos y determina si hay menos de 100
-        printf("\nEl número de archivos es: %d\n", count);
+        //printf("\nEl número de archivos es: %d\n", count);
+        
         if (count < 100) {
             handle_request(new_socket, count,TxtSecuencial);
         }close(new_socket);
@@ -100,9 +117,6 @@ int main(int argc, char const *argv[]){
 }
 
 void handle_request(int socket_fd, int image_count, FILE* Txt){
-    
-
-    
     //Tiempo inicial del CPU 
     struct timespec start, end;
     clock_gettime(CLOCK_MONOTONIC, &start);
@@ -124,24 +138,45 @@ void handle_request(int socket_fd, int image_count, FILE* Txt){
     FILE* fp = fopen(imageName, "wb");
 
     char buffer[CHUNCK_SIZE];
-    int bytes_received, bytes_written;
+    int bytes_received, bytes_written, total_bytes_received;
 
+    double bytes_per_sec;
+
+    //TIME//
+    struct timeval current_time, last_time;
+    
     // Receive the image data in chunks and write to file
     // N-Ciclos
     for(int i = 0; i < nCycles; i++){
+        if(image_count < 100){            
 
-        if(image_count < 100){
+            gettimeofday(&last_time, NULL);
+            
             while ((bytes_received = recv(socket_fd, buffer, CHUNCK_SIZE, 0)) > 0) {
                 bytes_written = fwrite(buffer, 1, bytes_received, fp);
+                total_bytes_received += bytes_received;
                 if (bytes_written != bytes_received) {
                     printf("Error writing data\n");
                     break;
                 }
             }
+            
+            gettimeofday(&current_time, NULL);
+            double time_diff = (current_time.tv_sec - last_time.tv_sec) + (current_time.tv_usec - last_time.tv_usec) / 1e6;
+            bytes_per_sec += total_bytes_received / time_diff;
+            
+            total_bytes_received = 0;
+            last_time = current_time;
+            
             sobel(imageName, image_count);
             image_count++;
+
         }
     }
+    
+    //El promedio de bytes recibidos por los nThreads
+    bytes_per_sec /=nThreads;
+
     fclose(fp);
 
     //Tiempo final
@@ -176,7 +211,7 @@ void handle_request(int socket_fd, int image_count, FILE* Txt){
     pclose(fpa);
 
     // Escribir la info en el log file, se escribe una linea al final del archivo
-    char infoFormato[] = "%f,%d,%d,%d\n";
-    fprintf(Txt, infoFormato, time,idProcess,socketD,rss);
+    char infoFormato[] = "%f,%d,%d,%d,%f\n";
+    fprintf(Txt, infoFormato, time,idProcess,socketD,rss,bytes_per_sec);
     fflush(Txt);
 }

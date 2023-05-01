@@ -79,7 +79,7 @@ SecuencialTXT = leer_archivo("LogFiles/SecuencialLog.txt")
 HiloTXT = leer_archivo("LogFiles/HilosLog.txt")
 HeavyTXT = leer_archivo("LogFiles/HeavyLog.txt")
 
-########### Grafica 1: cantidad de solicitudes - Tiempo de ejecución
+########### Gráfica 1: cantidad de solicitudes - Tiempo de ejecución
 
 x_secuencial = getFeature(SecuencialTXT[1:],2)
 y_secuencial = getFeature(SecuencialTXT[1:],0)
@@ -96,9 +96,8 @@ plt.plot(x_heavy, y_heavy, 'o', label='Heavy')
 
 plt.xlabel('Cantidad de solicitudes')
 plt.ylabel('Tiempo de ejecución')
+plt.suptitle('Gráfica 1') # Agregar el título general a la figura
 plt.legend()  # Mostrar la leyenda de las series
-
-plt.show()
 
 ########### Grafica 2: cantidad de solicitudes - Tiempo promedio por solicitud
 
@@ -120,17 +119,16 @@ x_total_hilo=getCiclosxID(hiloID,EmisorTXT[1:])
 y_tiempo_heavy = promedioFeature(heavyID,HeavyTXT[1:],EmisorTXT[1:],0)
 x_total_heavy=getCiclosxID(heavyID,EmisorTXT[1:])
 
+plt.figure()  # Crear nueva figura para la segunda gráfica
+
 plt.plot(x_total_secuencial, y_tiempo_secuencial, 'o', label='Secuencial')
 plt.plot(x_total_hilo, y_tiempo_hilo, 'o', label='Hilo')
 plt.plot(x_total_heavy, y_tiempo_heavy, 'o', label='Heavy')
 
 plt.xlabel('Cantidad de solicitudes')
 plt.ylabel('Tiempo promedio por solicitud')
-
+plt.suptitle('Gráfica 2') # Agregar el título general a la figura
 plt.legend()  # Mostrar la leyenda de las series
-
-plt.show()
-
 
 ########### Grafica 3: cantidad de solicitudes - consumo de memoria en el servidor
 
@@ -139,6 +137,8 @@ y_memoria_secuencial = promedioFeature(secuencialID,SecuencialTXT[1:],EmisorTXT[
 y_memoria_hilo = promedioFeature(hiloID,HiloTXT[1:],EmisorTXT[1:],3)
 y_memoria_heavy = promedioFeature(heavyID,HeavyTXT[1:],EmisorTXT[1:],3)
 
+plt.figure()  # Crear nueva figura para la tercera gráfica
+
 plt.plot(x_total_secuencial, y_memoria_secuencial, 'o', label='Secuencial')
 plt.plot(x_total_hilo, y_memoria_hilo, 'o', label='Hilo')
 plt.plot(x_total_heavy, y_memoria_heavy, 'o', label='Heavy')
@@ -146,8 +146,30 @@ plt.plot(x_total_heavy, y_memoria_heavy, 'o', label='Heavy')
 plt.xlabel('Cantidad de solicitudes')
 plt.ylabel("Consumo de memoria en el servidor")
 
+plt.suptitle('Gráfica 3') # Agregar el título general a la figura
+
+plt.legend()  # Mostrar la leyenda de las series
+
+########### Grafica 4: cantidad de solicitudes - consumo de memoria en el servidor
+
+x_secuencial = getFeature(SecuencialTXT[1:],4)
+y_secuencial = getFeature(SecuencialTXT[1:],0)
+
+x_hilo = getFeature(HiloTXT[1:],4)
+y_hilo = getFeature(HiloTXT[1:],0)
+
+x_heavy = getFeature(HeavyTXT[1:],4)
+y_heavy = getFeature(HeavyTXT[1:],0)
+
+plt.figure()  # Crear nueva figura para la cuarta gráfica
+
+plt.plot(x_secuencial, y_secuencial, 'o', label='Secuencial')
+plt.plot(x_hilo, y_hilo, 'o', label='Hilo')
+plt.plot(x_heavy, y_heavy, 'o', label='Heavy')
+
+plt.xlabel('Cantidad de solicitudes')
+plt.ylabel('Promedio de Bytes recibidos por segundo')
+plt.suptitle('Gráfica 4') # Agregar el título general a la figura
 plt.legend()  # Mostrar la leyenda de las series
 
 plt.show()
-
-########### Grafica 4: cantidad de solicitudes - consumo de memoria en el servidor
