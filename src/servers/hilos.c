@@ -9,6 +9,7 @@
 #include <time.h>
 #include <pthread.h>
 #include "../../include/shared.h"
+#include "../../Native_Sobel/src/Sobel.h"
 
 typedef struct {
     int new_socket;
@@ -86,7 +87,7 @@ int main(int argc, char const *argv[]){
         }
         
         int count = 0;
-        dir = opendir("TestImg");
+        dir = opendir("filtered");
         // Cuenta el número de archivos en el directorio
         while ((ent = readdir(dir)) != NULL) {
             if (ent->d_type == DT_REG) { // DT_REG es un archivo regular
@@ -136,32 +137,31 @@ void *handle_request(void *parametro)
     
     // Open a file to write the image data
     char imageName[40];
-    int init_value = 0;
-    sprintf(imageName, "TestImg/image%d_%d.jpg", misParametro->num, init_value);
+    
+    sprintf(imageName, "TestImg/image_%d.jpg", misParametro->num);
     printf("image: %s \n", imageName);
     FILE* fp = fopen(imageName, "wb");
-
+        
     char buffer[CHUNCK_SIZE];
     int bytes_received, bytes_written;
-    // Receive the image data in chunks and write to file
-    while ((bytes_received = recv(misParametro->new_socket, buffer, CHUNCK_SIZE, 0)) > 0) {
-        bytes_written = fwrite(buffer, 1, bytes_received, fp);
-        if (bytes_written != bytes_received) {
-            printf("Error writing data\n");
-            break;
+
+
+    //N-Ciclos
+    for(int i = 0; i < nCycles; i++){
+        if(misParametro->num < 100){
+            while ((bytes_received = recv(misParametro->new_socket, buffer, CHUNCK_SIZE, 0)) > 0) {
+                bytes_written = fwrite(buffer, 1, bytes_received, fp);
+                if (bytes_written != bytes_received) {
+                    printf("Error writing data\n");
+                    break;
+                }
+            }
+            sobel(imageName, misParametro->num);
+            misParametro->num++;
         }
     }
-    //
-    //FILTRO Y LOS N-CICLOS
-    //
-    sobel(imageName,  misParametro->num, init_value);
-    // formato de nombre de imagen: TestImg/imagen_thread_iteracion.jpg
-    for(int i = 1; i < nCycles; i++){
-        sobel(imageName,  misParametro->num, i);
-
-    }
-
-    fclose(fp); 
+    
+    fclose(fp);
     //Tiempo final
     clock_gettime(CLOCK_MONOTONIC, &end);
     double time = (end.tv_sec - start.tv_sec) +(end.tv_nsec - start.tv_nsec) / 1e9;
@@ -170,7 +170,6 @@ void *handle_request(void *parametro)
     char bufferTest[50];
     char command[30];
     sprintf(command, "ps -p %d -o rss", getpid());
-    printf("--------------%s---------------",command);
     FILE* fpa = popen(command, "r");
     if (fpa == NULL) {
         printf("Failed to execute command\n" );

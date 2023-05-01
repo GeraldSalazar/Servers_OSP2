@@ -149,3 +149,5 @@ plt.ylabel("Consumo de memoria en el servidor")
 plt.legend()  # Mostrar la leyenda de las series
 
 plt.show()
+
+########### Grafica 4: cantidad de solicitudes - consumo de memoria en el servidor

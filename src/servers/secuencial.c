@@ -9,6 +9,7 @@
 #include <time.h>
 #include "../../include/shared.h"
 #include "../../Native_Sobel/src/Sobel.h"
+
 void handle_request(int socket_fd, int image_count,FILE* Txt);
 
 int main(int argc, char const *argv[]){
@@ -77,7 +78,7 @@ int main(int argc, char const *argv[]){
         }
 
         int count = 0;
-        dir = opendir("TestImg");
+        dir = opendir("filtered");
         // Cuenta el número de archivos en el directorio
         while ((ent = readdir(dir)) != NULL) {
             if (ent->d_type == DT_REG) { // DT_REG es un archivo regular
@@ -99,6 +100,9 @@ int main(int argc, char const *argv[]){
 }
 
 void handle_request(int socket_fd, int image_count, FILE* Txt){
+    
+
+    
     //Tiempo inicial del CPU 
     struct timespec start, end;
     clock_gettime(CLOCK_MONOTONIC, &start);
@@ -115,30 +119,29 @@ void handle_request(int socket_fd, int image_count, FILE* Txt){
     
     // Open a file to write the image data
     char imageName[40];
-    int init_value = 0;
-    sprintf(imageName, "TestImg/image%d_%d.jpg", image_count, init_value);
+    sprintf(imageName, "TestImg/image_%d.jpg", image_count);
     printf("image: %s \n", imageName);
     FILE* fp = fopen(imageName, "wb");
 
     char buffer[CHUNCK_SIZE];
     int bytes_received, bytes_written;
+
     // Receive the image data in chunks and write to file
-    while ((bytes_received = recv(socket_fd, buffer, CHUNCK_SIZE, 0)) > 0) {
-        bytes_written = fwrite(buffer, 1, bytes_received, fp);
-        if (bytes_written != bytes_received) {
-            printf("Error writing data\n");
-            break;
+    // N-Ciclos
+    for(int i = 0; i < nCycles; i++){
+
+        if(image_count < 100){
+            while ((bytes_received = recv(socket_fd, buffer, CHUNCK_SIZE, 0)) > 0) {
+                bytes_written = fwrite(buffer, 1, bytes_received, fp);
+                if (bytes_written != bytes_received) {
+                    printf("Error writing data\n");
+                    break;
+                }
             }
-    } 
-    //
-    //FILTRO Y LOS N-CICLOS
-    sobel(imageName, image_count, init_value);
-    // formato de nombre de imagen: TestImg/imagen_thread_iteracion.jpg
-    for(int i = 1; i < nCycles; i++){
-        sobel(imageName, image_count, i);
-
+            sobel(imageName, image_count);
+            image_count++;
+        }
     }
-
     fclose(fp);
 
     //Tiempo final
@@ -148,9 +151,10 @@ void handle_request(int socket_fd, int image_count, FILE* Txt){
     //Toma de la memoria
     char bufferTest[50];
     char command[30];
+
     sprintf(command, "ps -p %d -o rss", getpid());
-    printf("--------------%s---------------",command);
     FILE* fpa = popen(command, "r");
+    
     if (fpa == NULL) {
         printf("Failed to execute command\n" );
         exit(1);

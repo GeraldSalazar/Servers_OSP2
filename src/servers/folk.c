@@ -8,7 +8,9 @@
 #include <dirent.h>
 #include <time.h>
 #include <pthread.h>
+#include <sys/wait.h>
 #include "../../include/shared.h"
+#include "../../Native_Sobel/src/Sobel.h"
 
 void handle_request(int socket_fd, int image_count,FILE* Txt);
 
@@ -68,7 +70,7 @@ int main(int argc, char const *argv[]){
     FILE* TxtHeavy=fopen("LogFiles/HeavyLog.txt","a");
 
     while(1){
-        printf("Waiting for a connection on port %d. IP: %s\n", PORTH, inet_ntoa(sin.sin_addr));
+        printf("Waiting for a connection on port %d. IP: %s\n", PORTF, inet_ntoa(sin.sin_addr));
         fflush(stdout);
         // Wait and accept incoming connections and handle them
         if ((new_socket = accept(socket_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0) {
@@ -76,7 +78,7 @@ int main(int argc, char const *argv[]){
             exit(EXIT_FAILURE);
         }
         int count = 0;
-        dir = opendir("TestImg");
+        dir = opendir("filtered");
         // Cuenta el número de archivos en el directorio
         while ((ent = readdir(dir)) != NULL) {
             if (ent->d_type == DT_REG) { // DT_REG es un archivo regular
@@ -89,10 +91,13 @@ int main(int argc, char const *argv[]){
         // Imprime el número de archivos y determina si hay menos de 100
         printf("El número de archivos es: %d\n", count);
         if (count < 100) {
-            pid_t pid = fork();        
+
+            pid_t pid = fork();
             if(pid == 0){// Proceso hijo 
                 handle_request(new_socket, count, TxtHeavy);
                 exit(0);
+            }else{
+                wait(NULL);
             }
         }close(new_socket);
         
@@ -119,31 +124,30 @@ void handle_request(int socket_fd, int image_count,FILE* Txt)
     
     // Open a file to write the image data
     char imageName[40];
-    int init_value = 0;
-    sprintf(imageName, "TestImg/image%d_%d.jpg", image_count, init_value);
+
+    sprintf(imageName, "TestImg/image_%d.jpg", image_count);
     printf("image: %s \n", imageName);
     FILE* fp = fopen(imageName, "wb");
 
     char buffer[CHUNCK_SIZE];
     int bytes_received, bytes_written;
+
     // Receive the image data in chunks and write to file
-    while ((bytes_received = recv(socket_fd, buffer, CHUNCK_SIZE, 0)) > 0) {
-        bytes_written = fwrite(buffer, 1, bytes_received, fp);
-        if (bytes_written != bytes_received) {
-            printf("Error writing data\n");
-            break;
+    // N-Ciclos
+    for(int i = 0; i < nCycles; i++){
+
+        if(image_count < 100){
+            while ((bytes_received = recv(socket_fd, buffer, CHUNCK_SIZE, 0)) > 0) {
+                bytes_written = fwrite(buffer, 1, bytes_received, fp);
+                if (bytes_written != bytes_received) {
+                    printf("Error writing data\n");
+                    break;
+                }
+            }
+            sobel(imageName, image_count);
+            image_count++;
         }
     }
-
-    //
-    //FILTRO Y LOS N-CICLOS
-    sobel(imageName, image_count, init_value);
-    // formato de nombre de imagen: TestImg/imagen_thread_iteracion.jpg
-    for(int i = 1; i < nCycles; i++){
-        sobel(imageName, image_count, i);
-
-    }
-
     fclose(fp);
 
     //Tiempo final
@@ -154,7 +158,6 @@ void handle_request(int socket_fd, int image_count,FILE* Txt)
     char bufferTest[50];
     char command[30];
     sprintf(command, "ps -p %d -o rss", getpid());
-    printf("--------------%s---------------",command);
     FILE* fpa = popen(command, "r");
     if (fpa == NULL) {
         printf("Failed to execute command\n" );

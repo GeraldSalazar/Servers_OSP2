@@ -14,6 +14,9 @@
 #include "math.h"
 #include "string.h"
 #include <sys/time.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <sys/types.h>
 
 typedef unsigned char byte;
 
@@ -26,7 +29,7 @@ typedef unsigned char byte;
 // true --> Vertical gradient and horizontal gradient are output
 #define INTERMEDIATE_OUTPUT false
 
-int sobel(char *inputImage_fp, int imagecount, int nCycle)
+int sobel(char *inputImage_fp, int imagecount)
 {
 	// initialize all the timevals at the beginning of the program to avoid cluttered declarations later on
 	struct timeval comp_start_load_img, comp_end_load_img;
@@ -46,18 +49,27 @@ int sobel(char *inputImage_fp, int imagecount, int nCycle)
 	// ###########1. STEP - LOAD THE IMAGE, ITS HEIGHT, WIDTH AND CONVERT IT TO RGB FORMAT#########
 
 	// Specify the input image. Formats supported: png, jpg, GIF.
+	//int r = rand() % 20;
+	
+	char *file_output_RGB = "Native_Sobel/imgs_out/img.rgb";
+	system("rm Native_Sobel/imgs_out/* -rf");
+	
+	char command[100];
+    sprintf(command, "convert -regard-warnings %s Native_Sobel/imgs_out/img.rgb", inputImage_fp);
+    FILE* fpa = popen(command, "r");
+	fclose(fpa);
 
-	char *file_output_RGB = "Native_Sobel/imgs_out/image_.rgb";
-	char *png_strings[4] = {"convert ", inputImage_fp, " ", file_output_RGB};
-	char *str_PNG_to_RGB = array_strings_to_string(png_strings, 4, STRING_BUFFER_SIZE);
-
-	// printf("Loading input image [%s] \n", fileInputName); //debug
-
+	//printf("\n -----Loading input image -----[%s] \n", file_output_RGB); //debug
+	//printf("\n ----INPUT IMG FG-------- [%s] \n", inputImage_fp); //debug
+	//printf("\n -------------- [%s] \n", str_PNG_to_RGB); //debug
+	
 	get_time(comp_end_load_img);
 
 	// actually execute the conversion from PNG to RGB, as that format is required for the program
 	get_time(i_o_start_load_img);
-	int status_conversion = system(str_PNG_to_RGB);
+	
+	int status_conversion=0;
+
 	get_time(i_o_end_load_img);
 
 	get_time(comp_start_image_processing);
@@ -135,7 +147,7 @@ int sobel(char *inputImage_fp, int imagecount, int nCycle)
 	get_time(i_o_start_png_conversion);
 
 	char sobel_contour[100];
-	sprintf(sobel_contour,"filtered/sobel_countour_%d_%d.png", imagecount, nCycle);
+	sprintf(sobel_contour,"filtered/sobel_countour_%d.png", imagecount);
 
 	output_gradient(true, countour_img,
 					gray_size, str_width, str_height, STRING_BUFFER_SIZE, sobel_contour);
